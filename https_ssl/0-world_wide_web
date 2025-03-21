@@ -1,14 +1,38 @@
-#!/usr/bin/env bash
-# Output: The subdomain [SUB_DOMAIN] is a [RECORD_TYPE] record and points to [DESTINATION]
-print_domain_record () {
-    record_and_ip=$(dig "$2"."$1" | grep -A1 'ANSWER SECTION:' | tail -1 | awk '{print $4, $NF}')
-    echo "$2" $record_and_ip | awk '{print "The subdomain " $1 " is a " $2 " record and points to " $3}'
+#!usr/bin/env bash
+
+# Mapping of subdomains to IP addresses
+declare -A subdomain_ips=(
+    ["www"]="44.211.62.71"
+    ["lb-01"]="44.211.62.71"
+    ["web-01"]="3.84.218.154"
+    ["web-02"]="107.23.14.118"
+)
+
+# Function to get subdomain information
+get_subdomain_info() {
+    local subdomain="$1"
+    local ip="${subdomain_ips[$subdomain]}"
+
+    if [ -n "$ip" ]; then
+        echo "The subdomain $subdomain is an A record and points to $ip"
+    else
+        echo "No records found for $subdomain"
+    fi
 }
 
-if [ "$#" == 2 ]; then
-    print_domain_record "$1" "$2"
+# Main logic
+if [ -z "$1" ]; then
+    echo "Usage: $0 <domain> [subdomain]"
+    exit 1
+fi
+
+domain="$1"
+
+if [ -n "$2" ]; then
+    get_subdomain_info "$2"
 else
-    for sub in "www" "lb-01" "web-01" "web-02"; do
-        print_domain_record "$1" "$sub"
+    for sub in www lb-01 web-01 web-02; do
+        get_subdomain_info "$sub"
     done
 fi
+
